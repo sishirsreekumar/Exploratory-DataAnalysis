@@ -10,29 +10,42 @@ pollution <- readRDS("summarySCC_PM25.rds")
 source.code <- readRDS("Source_Classification_Code.rds")
 
 total <- aggregate(Emissions ~ year,data = pollution,FUN = sum)
-par(mar=c(5,6,5,5))
-plot(total$year, total$Emissions/(10^6), xlab = "Year", ylab = expression(paste("Total PM" ["2.5"]," Emission (10"^"6", " Tons)")), main = expression(paste("Total PM" ["2.5"]," from all sources")))
-lines(total$year, total$Emissions/(10^6), type = "l")
+x1<-barplot(height=total$Emissions/1000, names.arg=total$year,xlab="years", ylab=expression(paste("Total PM" ["2.5"]," Emission in Kilotons)")),main=expression(paste("Total PM" ["2.5"]," from all sources 1999 - 2008 in KiloTons")), ylim=c(0,8000))
+text(x = x1, y = total$Emissions/1000, label = round(total$Emissions/1000,2), pos = 3)
+dev.copy(png,'plot1.png')
+dev.off()
+#par(mar=c(5,6,5,5))
+#plot(total$year, total$Emissions, xlab = "Year", ylab = expression(paste("Total PM" ["2.5"]," Emission (10"^"6", " Tons)")), main = expression(paste("Total PM" ["2.5"]," from all sources")))
+#lines(total$year, total$Emissions/(10^6), type = "l")
 #with(total, text(Emissions~year, labels = total[,], pos = 4))
 
 Baltimore_pollution <- pollution[pollution$fips=="24510",]
 total_baltimore <- aggregate(Emissions ~ year, data = Baltimore_pollution, FUN = sum)
-plot(total_baltimore$year, total_baltimore$Emissions/(10^6), xlab = "Year", ylab = expression(paste("Total PM" ["2.5"]," Emission (10"^"6", " Tons)")), main = expression(paste("Total PM" ["2.5"]," from all sources")))
-lines(total_baltimore$year, total_baltimore$Emissions/(10^6), type = "l")
+x2<-barplot(height=total_baltimore$Emissions, names.arg=total_baltimore$year,xlab="years", ylab=expression(paste("Total PM" ["2.5"]," Emission in Tons)")),main=expression(paste("Total PM" ["2.5"]," in Baltimore City (1999 - 2008)")), ylim = c(0, 4000))
+text(x = x2, y = total_baltimore$Emissions, label = round(total_baltimore$Emissions,2), pos = 3)
+dev.copy(png,'plot2.png')
+dev.off()
+
+
+
+
+#plot(total_baltimore$year, total_baltimore$Emissions/(1000), xlab = "Year", ylab = expression(paste("Total PM" ["2.5"]," Emission (10"^"6", " Tons)")), main = expression(paste("Total PM" ["2.5"]," from all sources")))
+#lines(total_baltimore$year, total_baltimore$Emissions/(1000), type = "l")
 
 library(ggplot2)
 g = ggplot(data = Baltimore_pollution, aes(x = factor(year), y = Emissions ))
-g + geom_bar(stat="identity") + facet_grid(.~type ) + labs(x = "Year", y = expression("Total PM"[2.5]*" Emission (Tons)"), title = expression("PM"[2.5]*" Emissions, Baltimore City 1999-2008 by Source Type"))  
+g + geom_bar(aes(fill=type), stat="identity", width = 0.5) + facet_grid(.~type ) + labs(x = "Year", y = expression("Total PM"[2.5]*" Emission (Tons)"), title = expression("PM"[2.5]*" Emissions in Baltimore City (1999-2008) by Source Type"))
+dev.copy(png,'plot3.png')
+dev.off()
 
-coal.combustion <- grepl("Fuel Comb.*Coal", source.code$EI.Sector)
+
+
+
+coal.combustion <- grepl("Coal$", source.code$EI.Sector)
 coal.combustion.SCC <- source.code[coal.combustion,]$SCC
 pollution.coal.combustion <- pollution[pollution$SCC %in% coal.combustion.SCC,]
-
-
-
-g1 <- ggplot(pollution.coal.combustion, aes(x=factor(year), y=Emissions/1000, fill=year)) 
-
-g1+  geom_bar(stat="identity") +xlab("year") + ylab(expression("total PM"[2.5]*" emissions")) + ggtitle("Emissions from coal combustion-related sources in kilotons")
+g1 <- ggplot(pollution.coal.combustion, aes(x=factor(year), y=Emissions/1000)) 
+g1+  geom_bar(aes(fill=factor(year)), stat="identity") + labs(x = "Year", y = expression("Total PM"[2.5]*" Emission (KiloTons)"), title = expression("PM"[2.5]*" Emissions from Coal Combustion related Sources by Year"))
 
 vehicle <- grepl("Vehicles$", source.code$EI.Sector)
 vehicle.scc <-  source.code[vehicle,]$SCC
