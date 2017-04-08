@@ -8,7 +8,6 @@ if(!(file.exists("Source_Classification_Code.rds") &&
 
 pollution <- readRDS("summarySCC_PM25.rds")
 source.code <- readRDS("Source_Classification_Code.rds")
-
 total <- aggregate(Emissions ~ year,data = pollution,FUN = sum)
 x1<-barplot(height=total$Emissions/1000, names.arg=total$year,xlab="years", ylab=expression(paste("Total PM" ["2.5"]," Emission in Kilotons)")),main=expression(paste("Total PM" ["2.5"]," from all sources 1999 - 2008 in KiloTons")), ylim=c(0,8000))
 text(x = x1, y = total$Emissions/1000, label = round(total$Emissions/1000,2), pos = 3)
@@ -31,35 +30,44 @@ dev.off()
 
 #plot(total_baltimore$year, total_baltimore$Emissions/(1000), xlab = "Year", ylab = expression(paste("Total PM" ["2.5"]," Emission (10"^"6", " Tons)")), main = expression(paste("Total PM" ["2.5"]," from all sources")))
 #lines(total_baltimore$year, total_baltimore$Emissions/(1000), type = "l")
-
+install.packages("ggplot2")
 library(ggplot2)
 g = ggplot(data = Baltimore_pollution, aes(x = factor(year), y = Emissions ))
-g + geom_bar(aes(fill=type), stat="identity", width = 0.5) + facet_grid(.~type ) + labs(x = "Year", y = expression("Total PM"[2.5]*" Emission (Tons)"), title = expression("PM"[2.5]*" Emissions in Baltimore City (1999-2008) by Source Type"))
+g + geom_bar(aes(fill=type), stat="identity") + facet_grid(.~type ) + labs(x = "Year", y = expression("Total PM"[2.5]*" Emission (Tons)"), title = expression("PM"[2.5]*" Emissions in Baltimore City (1999-2008) by Source Type"))+guides(fill=FALSE)
 dev.copy(png,'plot3.png')
 dev.off()
 
 
-
-
+install.packages("ggplot2")
+library(ggplot2)
 coal.combustion <- grepl("Coal$", source.code$EI.Sector)
 coal.combustion.SCC <- source.code[coal.combustion,]$SCC
 pollution.coal.combustion <- pollution[pollution$SCC %in% coal.combustion.SCC,]
 g1 <- ggplot(pollution.coal.combustion, aes(x=factor(year), y=Emissions/1000)) 
-g1+  geom_bar(aes(fill=factor(year)), stat="identity") + labs(x = "Year", y = expression("Total PM"[2.5]*" Emission (KiloTons)"), title = expression("PM"[2.5]*" Emissions from Coal Combustion related Sources by Year"))
+g1+  geom_bar(aes(fill=factor(year)), stat="identity") + labs(x = "Year", y = expression("Total PM"[2.5]*" Emission (KiloTons)"), title = expression("PM"[2.5]*" Emissions from Coal Combustion related Sources by Year"))+guides(fill=FALSE)
+dev.copy(png,'plot4.png')
+dev.off()
 
+install.packages("ggplot2")
+library(ggplot2)
 vehicle <- grepl("Vehicles$", source.code$EI.Sector)
 vehicle.scc <-  source.code[vehicle,]$SCC
-
 Baltimore.pollution.vehicle <- pollution[pollution$fips=="24510" & pollution$SCC %in% vehicle.scc ,]
+g2 <- ggplot(Baltimore.pollution.vehicle,aes(factor(year),Emissions, fill=factor(year)))
+g2 +  geom_bar(stat="identity") + labs(x="year", y=expression("Total PM"[2.5]*" Emission (Tons)"), title =expression("PM"[2.5]*" Motor Vehicle Source Emissions in Baltimore from 1999-2008"))+ guides(fill=FALSE)
+dev.copy(png,'plot5.png')
+dev.off()
 
+install.packages("ggplot2")
 library(ggplot2)
-g2 <- ggplot(Baltimore.pollution.vehicle,aes(factor(year),Emissions, fill=year))
-g2 +  geom_bar(stat="identity") + labs(x="year", y=expression("Total PM"[2.5]*" Emission (Tons)"), title =expression("PM"[2.5]*" Motor Vehicle Source Emissions in Baltimore from 1999-2008"))
-
+vehicle <- grepl("Vehicles$", source.code$EI.Sector)
+vehicle.scc <-  source.code[vehicle,]$SCC
+Baltimore.pollution.vehicle <- pollution[pollution$fips=="24510" & pollution$SCC %in% vehicle.scc ,]
 Baltimore.pollution.vehicle$city <- "Baltimore City"
 Losangeles.pollution.vehicle <- pollution[pollution$fips=="06037" & pollution$SCC %in% vehicle.scc ,]
 Losangeles.pollution.vehicle$city <- "Los Angeles County"
 combined <- rbind(Baltimore.pollution.vehicle,Losangeles.pollution.vehicle)
-
 g3 <- ggplot(combined, aes(x=factor(year), y=Emissions))
-g3 + geom_bar(aes(fill=year),stat="identity") +  facet_grid(city~., scales="free")+ labs(x="year", y=expression("Total PM"[2.5]*" Emission in Tons)"), title=expression("PM"[2.5]*" Motor Vehicle Source Emissions in Baltimore & LA, 1999-2008"))
+g3 + geom_bar(aes(fill=factor(year)),stat="identity") +  facet_grid(city~., scales="free")+ labs(x="year", y=expression("Total PM"[2.5]*" Emission in Tons)"), title=expression("PM"[2.5]*" Motor Vehicle Source Emissions in Baltimore & LA, 1999-2008"))+guides(fill= FALSE)
+dev.copy(png,'plot6.png')
+dev.off()
